@@ -5,6 +5,20 @@ Source code for the paper [Adaptive Perturbation-Based Gradient Estimation for D
 This work extends our [Implicit MLE](https://arxiv.org/abs/2106.01798) method for back-propagating though black-box combinatorial solvers such as `top-k` functions, shortest path algorithms, and maximum spanning tree algorithms -- for a friendly introduction to Implicit MLE, check [our video](https://www.youtube.com/watch?v=hb2b0K2PTxI) or [Yannic Kilcher's video](https://www.youtube.com/watch?v=W2UT8NjUqrk) on this topic.
 
 Here the `imle/` folder contains a plug-and-play library with decorators for turning arbitrary black-box combinatorial solvers into differentiable neural network layers, similar in spirit to [torch-imle](https://github.com/uclnlp/torch-imle), while `aaai23/` contains the code we used in the experiments of our AAAI 2023 paper.
+## Current Problem
+When running the VAE task specifically in the project running: 
+```bash
+python ./cli/vae-cli_reinforce.py -e 100 -b 100 -K 10 --code-m 20 --code-n 20 -M aimle_to_reinforce --imle-samples 10 --imle-noise sog --imle-temperature 1.0 --imle-lambda 0.0 --aimle-symmetric --aimle-target adaptive --ste-noise sog --ste-temperature 0.0 --seed 0 --init-temperature 0.0 --gradient-scaling --aimle-beta-update-momentum 0.0 --aimle-beta-update-step 0.001 --aimle-target-norm 10.0.
+```
+The error comes from the the line 
+        score_sampling = storch.method.ScoreFunction("z", n_samples=10)
+in the aaa23/torch/dave/modules.py
+
+While implementing the ScoreFunction method with the Storchastic package, I encountered a challenge related to tensor reshaping. The Storch tensors, when subjected to sampling using the ScoreFunction method, are attached with plates, which make it difficult for me to reshape the resulting tensor. Specifically, I have a tensor with dimensions [10, 2000, 20], where the value of 10 represents the number of samples obtained. I aim to reshape it into [100, 20, 10, 20], but I encounter an error due to the restrictions imposed by the plates rules. The error message reads as follows:
+
+```bash
+ValueError: Storch Tensors should take into account their surrounding plates. Violated at dimension 0 and plate z with size 10. Instead, it was 100. Batch links: [('z', 10, tensor(0.1000))] Tensor shape: torch.Size([100, 20, 10, 20])
+```
 
 ## Using the code as a library
 
